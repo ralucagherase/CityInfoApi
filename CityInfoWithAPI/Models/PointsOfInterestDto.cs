@@ -5,17 +5,10 @@ using System.Threading.Tasks;
 
 namespace CityInfoWithAPI.Models
 {
-    public class CityDto
+    public class PointsOfInterestDto
     {
         public int Id { get; set; }
         public string Name { get; set; }
         public string Description { get; set; }
-
-        public int NumberOfPointsOfInterest
-        {
-            get { return PointsOfInterest.Count; }
-        }
-        public ICollection<PointsOfInterestDto> PointsOfInterest { get; set; }
-        =new List<PointsOfInterestDto>();
     }
 }
