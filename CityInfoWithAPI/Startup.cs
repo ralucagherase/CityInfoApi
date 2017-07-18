@@ -2,11 +2,13 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using CityInfoWithAPI.Entities;
 using CityInfoWithAPI.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -51,6 +53,8 @@ namespace CityInfoWithAPI
 #else
             services.AddTransient<IMailService,CloudMailService>();
 #endif
+            var connectionString = @"Server=(localdb)\MSSQLLocalDB;Database=CityInfoDb;Trusted_Connection=True;";
+            services.AddDbContext<CityInfoContext>(o=>o.UseSqlServer(connectionString));
 
         }
 
