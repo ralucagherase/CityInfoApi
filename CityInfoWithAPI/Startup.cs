@@ -24,10 +24,7 @@ namespace CityInfoWithAPI
 
         public Startup(IHostingEnvironment env)
         {
-            var builder=new ConfigurationBuilder().
-                SetBasePath(env.ContentRootPath).
-                AddJsonFile("appSettings.json",optional:false,reloadOnChange:true).
-                AddJsonFile($"appSettings.{env.EnvironmentName}.json",optional:true,reloadOnChange:true);
+            var builder=new ConfigurationBuilder().SetBasePath(env.ContentRootPath).AddJsonFile("appSettings.json",optional:false,reloadOnChange:true).AddJsonFile($"appSettings.{env.EnvironmentName}.json",optional:true,reloadOnChange:true);
             Configuration = builder.Build();
         }
         // This method gets called by the runtime. Use this method to add services to the container.
@@ -79,6 +76,13 @@ namespace CityInfoWithAPI
             }
             cityInfoContext.EnsureSeedDataForContext();
             app.UseStatusCodePages();
+            AutoMapper.Mapper.Initialize(cfg =>
+                {
+                    cfg.CreateMap<Entities.City, Models.CityWithoutPointsOfInterestDto>();
+                    cfg.CreateMap<Entities.City, Models.CityDto>();
+                    cfg.CreateMap<Entities.PointOfInterest, Models.PointOfInterestDto>();
+                }
+            );
 
             app.UseMvc();
             /*app.Run(async (context) =>
