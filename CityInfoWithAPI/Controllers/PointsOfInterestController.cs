@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices.ComTypes;
 using System.Threading.Tasks;
+using AutoMapper;
 using CityInfoWithAPI.Models;
 using CityInfoWithAPI.Services;
 using Microsoft.AspNetCore.JsonPatch;
@@ -29,7 +30,7 @@ namespace CityInfoWithAPI.Controllers
         {
             try
             {
-                //var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
+                
                 if (!_cityInfoRepository.CityExists(cityId))
                 {
                     _logger.LogInformation($"City with id{cityId} wasn't found when accesing points of interest.");
@@ -37,17 +38,8 @@ namespace CityInfoWithAPI.Controllers
                 }
 
                 var pointsOfInterestForCity = _cityInfoRepository.GetPointsOfInterestForCity(cityId);
-                var pointsOfInterestForCityResults = new List<PointOfInterestDto>();
-
-                foreach (var poi in pointsOfInterestForCityResults)
-                {
-                    pointsOfInterestForCityResults.Add(new PointOfInterestDto()
-                    {
-                        Id=poi.Id,
-                        Name = poi.Name,
-                        Description=poi.Description
-                    });
-                }
+                var pointsOfInterestForCityResults =
+                    Mapper.Map<IEnumerable<PointOfInterestDto>>(pointsOfInterestForCity);
 
                 return Ok(pointsOfInterestForCityResults);
             }
@@ -76,24 +68,8 @@ namespace CityInfoWithAPI.Controllers
                     return NotFound();
                 }
 
-                var pointOfInterestResut=new PointOfInterestDto()
-                {
-                    Id=pointOfInterest.Id,
-                    Name = pointOfInterest.Name,
-                    Description = pointOfInterest.Description
-                };
+                var pointOfInterestResut = Mapper.Map<PointOfInterestDto>(pointOfInterest);
 
-//            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-//            if (city == null)
-//            {
-//                return NotFound();
-//            }
-//
-//            var pointOfInterest = city.PointsOfInterest.FirstOrDefault(p => p.Id == id);
-//            if (pointOfInterest == null)
-//            {
-//                return NotFound();
-//            }
                 return Ok(pointOfInterestResut);
             }
             catch (Exception e)
@@ -119,25 +95,24 @@ namespace CityInfoWithAPI.Controllers
             {
                 return BadRequest(ModelState);
             }
-            var city = CitiesDataStore.Current.Cities.FirstOrDefault(c => c.Id == cityId);
-            if (city == null)
+            if (!_cityInfoRepository.CityExists(cityId))
             {
                 return NotFound();
+
             }
 
-            var maxPointOfInterestId = CitiesDataStore.Current.Cities.SelectMany(c => c.PointsOfInterest)
-                .Max(p => p.Id);
+            var finalPointOfInterest = Mapper.Map<Entities.PointOfInterest>(pointOfInterest);
 
-            var finalPointOfInterest=new PointOfInterestDto()
+           _cityInfoRepository.AddPointOfInterestForCity(cityId,finalPointOfInterest);
+
+            if (!_cityInfoRepository.Save())
             {
-                Id = ++maxPointOfInterestId,
-                Name = pointOfInterest.Name,
-                Description = pointOfInterest.Description
-            };
+                return StatusCode(500, "Problem handling your request.");
+            }
 
-            city.PointsOfInterest.Add(finalPointOfInterest);
+            var createdPointOfInterestToReturn = Mapper.Map<Models.PointOfInterestDto>(finalPointOfInterest);
             return CreatedAtRoute("GetPointOfInterest",new
-            {cityId=cityId,id=finalPointOfInterest.Id}, finalPointOfInterest);
+            {cityId=cityId,id=createdPointOfInterestToReturn}, createdPointOfInterestToReturn);
         }
 
         [HttpPut("{cityId}/pointsofinterest/{id}")]
